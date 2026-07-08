@@ -35,4 +35,4 @@ Modules may be extracted into independent services once:
 
 - Team size exceeds 5 engineers
 - Scaling requirements justify separation
-- Operational tooling matures
+- Operational tooling mature 
