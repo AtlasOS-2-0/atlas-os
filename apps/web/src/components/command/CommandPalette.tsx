@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface AgentState {
   status: string;
@@ -22,6 +23,8 @@ export default function CommandPalette({
   setAgentActivity,
   setAgentStatus,
 }: CommandPaletteProps) {
+  const router = useRouter();
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -49,6 +52,8 @@ export default function CommandPalette({
     {
       name: "Create Project",
       action: () => {
+        router.push("/projects");
+
         setAgentActivity(
           "Project creation wizard initialized 🚀"
         );
@@ -73,6 +78,8 @@ export default function CommandPalette({
     {
       name: "Open Workspace",
       action: () => {
+        router.push("/workspace");
+
         setAgentActivity(
           "Frontend Agent opened workspace successfully 📂"
         );
@@ -97,6 +104,8 @@ export default function CommandPalette({
     {
       name: "Ask Architect Agent",
       action: () => {
+        router.push("/agents");
+
         setAgentActivity(
           "Architect Agent activated and preparing system design 🤖"
         );
@@ -121,6 +130,8 @@ export default function CommandPalette({
     {
       name: "Open Terminal",
       action: () => {
+        router.push("/terminal");
+
         setAgentActivity(
           "Backend Agent prepared terminal environment 💻"
         );
@@ -145,6 +156,8 @@ export default function CommandPalette({
     {
       name: "Deploy Application",
       action: () => {
+        router.push("/deployments");
+
         setAgentActivity(
           "Deployment pipeline started 🚀"
         );
@@ -169,6 +182,8 @@ export default function CommandPalette({
     {
       name: "View Logs",
       action: () => {
+        router.push("/monitoring");
+
         setAgentActivity(
           "Collecting logs from all active agents 📜"
         );

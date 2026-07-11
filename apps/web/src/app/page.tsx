@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Sidebar from "@/components/layout/Sidebar";
 import RecentProjects from "@/components/dashboard/RecentProjects";
@@ -8,6 +8,9 @@ import SystemHealth from "@/components/dashboard/SystemHealth";
 import QuickActions from "@/components/dashboard/QuickActions";
 import Topbar from "@/components/layout/Topbar";
 import CommandPalette from "@/components/command/CommandPalette";
+import CreateProjectModal, {
+  Project,
+} from "@/components/projects/CreateProjectModal";
 
 export default function Home() {
   const [agentStatus, setAgentStatus] = useState({
@@ -31,6 +34,48 @@ export default function Home() {
     "Waiting for commands..."
   );
 
+  const [createProjectOpen, setCreateProjectOpen] =
+    useState(false);
+
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const savedProjects =
+      localStorage.getItem("atlas-projects");
+
+    if (savedProjects) {
+      setProjects(JSON.parse(savedProjects));
+    } else {
+      setProjects([
+        {
+          name: "Atlas API",
+          type: "Backend API",
+          stack: "FastAPI",
+          status: "Planning",
+        },
+        {
+          name: "Atlas UI",
+          type: "Frontend Application",
+          stack: "Next.js",
+          status: "Planning",
+        },
+        {
+          name: "AI Orchestrator",
+          type: "AI Service",
+          stack: "Python",
+          status: "Planning",
+        },
+      ]);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "atlas-projects",
+      JSON.stringify(projects)
+    );
+  }, [projects]);
+
   return (
     <main className="min-h-screen bg-black text-white">
       <CommandPalette
@@ -38,106 +83,172 @@ export default function Home() {
         setAgentStatus={setAgentStatus}
       />
 
+      <CreateProjectModal
+        open={createProjectOpen}
+        onClose={() => setCreateProjectOpen(false)}
+        onCreateProject={(project) => {
+          setProjects((prev) => [
+            project,
+            ...prev,
+          ]);
+
+          setAgentActivity(
+            `Project "${project.name}" created successfully 🚀`
+          );
+
+          // Frontend Application
+          if (
+            project.type ===
+            "Frontend Application"
+          ) {
+            setAgentStatus({
+              architect: {
+                status: "Active 🟢",
+                task: "Designing frontend architecture",
+              },
+
+              backend: {
+                status: "Idle ⚪",
+                task: "Not required for this project",
+              },
+
+              frontend: {
+                status: "Active 🟢",
+                task: `Building ${project.stack} interface`,
+              },
+            });
+          }
+
+          // Backend API
+          else if (
+            project.type ===
+            "Backend API"
+          ) {
+            setAgentStatus({
+              architect: {
+                status: "Active 🟢",
+                task: "Designing API architecture",
+              },
+
+              backend: {
+                status: "Active 🟢",
+                task: `Generating ${project.stack} services`,
+              },
+
+              frontend: {
+                status: "Idle ⚪",
+                task: "Waiting for API completion",
+              },
+            });
+          }
+
+          // Full Stack Application
+          else if (
+            project.type ===
+            "Full Stack Application"
+          ) {
+            setAgentStatus({
+              architect: {
+                status: "Active 🟢",
+                task: "Preparing full system design",
+              },
+
+              backend: {
+                status: "Active 🟢",
+                task: `Building ${project.stack} backend`,
+              },
+
+              frontend: {
+                status: "Active 🟢",
+                task: `Building ${project.stack} frontend`,
+              },
+            });
+          }
+
+          // AI Service
+          else if (
+            project.type ===
+            "AI Service"
+          ) {
+            setAgentStatus({
+              architect: {
+                status: "Active 🟢",
+                task: "Designing AI workflow",
+              },
+
+              backend: {
+                status: "Active 🟢",
+                task: `Preparing ${project.stack} inference service`,
+              },
+
+              frontend: {
+                status: "Idle ⚪",
+                task: "Waiting for AI endpoints",
+              },
+            });
+          }
+        }}
+      />
+
       <div className="flex h-screen">
-        {/* Sidebar */}
         <Sidebar />
 
-        {/* Main Content */}
         <section className="flex-1 overflow-auto p-8">
           <Topbar />
 
           <div className="grid gap-6 md:grid-cols-2">
-            <RecentProjects />
+            <RecentProjects
+              projects={projects}
+            />
+
             <SystemHealth />
-            <QuickActions />
+
+            <QuickActions
+              onCreateProject={() =>
+                setCreateProjectOpen(true)
+              }
+            />
           </div>
         </section>
 
-        {/* AI Hub */}
         <aside className="w-80 border-l border-gray-800 p-6">
           <h2 className="mb-6 text-2xl font-bold">
             AI Hub
           </h2>
 
           <div className="space-y-4">
-
-            {/* Architect Agent */}
-            <div className="rounded-lg border border-gray-700 p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="font-medium">
-                    Architect Agent
-                  </div>
-
-                  <div className="text-xs text-gray-500 mt-1">
-                    {agentStatus.architect.task}
-                  </div>
-                </div>
-
+            {Object.entries(agentStatus).map(
+              ([name, data]) => (
                 <div
-                  className={
-                    agentStatus.architect.status.includes("Active")
-                      ? "text-green-400 font-semibold"
-                      : "text-gray-400"
-                  }
+                  key={name}
+                  className="rounded-lg border border-gray-700 p-4"
                 >
-                  {agentStatus.architect.status}
-                </div>
-              </div>
-            </div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium capitalize">
+                        {name} Agent
+                      </div>
 
-            {/* Backend Agent */}
-            <div className="rounded-lg border border-gray-700 p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="font-medium">
-                    Backend Agent
-                  </div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        {data.task}
+                      </div>
+                    </div>
 
-                  <div className="text-xs text-gray-500 mt-1">
-                    {agentStatus.backend.task}
-                  </div>
-                </div>
-
-                <div
-                  className={
-                    agentStatus.backend.status.includes("Active")
-                      ? "text-green-400 font-semibold"
-                      : "text-gray-400"
-                  }
-                >
-                  {agentStatus.backend.status}
-                </div>
-              </div>
-            </div>
-
-            {/* Frontend Agent */}
-            <div className="rounded-lg border border-gray-700 p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="font-medium">
-                    Frontend Agent
-                  </div>
-
-                  <div className="text-xs text-gray-500 mt-1">
-                    {agentStatus.frontend.task}
+                    <div
+                      className={
+                        data.status.includes("Active")
+                          ? "text-green-400 font-semibold"
+                          : "text-gray-400"
+                      }
+                    >
+                      {data.status}
+                    </div>
                   </div>
                 </div>
-
-                <div
-                  className={
-                    agentStatus.frontend.status.includes("Active")
-                      ? "text-green-400 font-semibold"
-                      : "text-gray-400"
-                  }
-                >
-                  {agentStatus.frontend.status}
-                </div>
-              </div>
-            </div>
+              )
+            )}
           </div>
 
-          {/* Activity Feed */}
           <div className="mt-8 rounded-lg border border-blue-900 bg-blue-950/20 p-4">
             <h3 className="mb-2 font-semibold text-blue-400">
               Agent Activity
