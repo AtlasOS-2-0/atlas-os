@@ -7,6 +7,7 @@ export interface Project {
   type: string;
   stack: string;
   status: string;
+  files: string[];
 }
 
 interface CreateProjectModalProps {
@@ -31,15 +32,65 @@ export default function CreateProjectModal({
   const handleCreate = () => {
     if (!projectName.trim()) return;
 
+    let defaultFiles: string[] = [];
+
+    // Frontend Project
+    if (projectType === "Frontend Application") {
+      defaultFiles = [
+        "README.md",
+        "package.json",
+        "src/",
+        "public/",
+      ];
+    }
+
+    // Backend API
+    else if (projectType === "Backend API") {
+      defaultFiles = [
+        "README.md",
+        "requirements.txt",
+        "src/",
+        "api/",
+      ];
+    }
+
+    // Full Stack Project
+    else if (
+      projectType ===
+      "Full Stack Application"
+    ) {
+      defaultFiles = [
+        "README.md",
+        "package.json",
+        "src/",
+        "frontend/",
+        "backend/",
+        ".env",
+      ];
+    }
+
+    // AI Service
+    else if (projectType === "AI Service") {
+      defaultFiles = [
+        "README.md",
+        "model.py",
+        "inference.py",
+        "requirements.txt",
+      ];
+    }
+
     onCreateProject({
       name: projectName,
       type: projectType,
       stack,
       status: "Planning",
+      files: defaultFiles,
     });
 
     setProjectName("");
-    setProjectType("Frontend Application");
+    setProjectType(
+      "Frontend Application"
+    );
     setStack("Next.js");
 
     onClose();
@@ -78,9 +129,13 @@ export default function CreateProjectModal({
             }
             className="w-full rounded-lg border border-gray-800 bg-black p-3"
           >
-            <option>Frontend Application</option>
+            <option>
+              Frontend Application
+            </option>
             <option>Backend API</option>
-            <option>Full Stack Application</option>
+            <option>
+              Full Stack Application
+            </option>
             <option>AI Service</option>
           </select>
 

@@ -39,6 +39,10 @@ export default function Home() {
 
   const [projects, setProjects] = useState<Project[]>([]);
 
+  const [isLoaded, setIsLoaded] =
+    useState(false);
+
+  // Load projects from localStorage
   useEffect(() => {
     const savedProjects =
       localStorage.getItem("atlas-projects");
@@ -52,29 +56,54 @@ export default function Home() {
           type: "Backend API",
           stack: "FastAPI",
           status: "Planning",
+          files: [
+            "README.md",
+            "requirements.txt",
+            "src/",
+            "api/",
+          ],
         },
+
         {
           name: "Atlas UI",
           type: "Frontend Application",
           stack: "Next.js",
           status: "Planning",
+          files: [
+            "README.md",
+            "package.json",
+            "src/",
+            "public/",
+          ],
         },
+
         {
           name: "AI Orchestrator",
           type: "AI Service",
           stack: "Python",
           status: "Planning",
+          files: [
+            "README.md",
+            "model.py",
+            "inference.py",
+            "requirements.txt",
+          ],
         },
       ]);
     }
+
+    setIsLoaded(true);
   }, []);
 
+  // Save projects only after first load
   useEffect(() => {
+    if (!isLoaded) return;
+
     localStorage.setItem(
       "atlas-projects",
       JSON.stringify(projects)
     );
-  }, [projects]);
+  }, [projects, isLoaded]);
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -85,7 +114,9 @@ export default function Home() {
 
       <CreateProjectModal
         open={createProjectOpen}
-        onClose={() => setCreateProjectOpen(false)}
+        onClose={() =>
+          setCreateProjectOpen(false)
+        }
         onCreateProject={(project) => {
           setProjects((prev) => [
             project,
@@ -96,7 +127,7 @@ export default function Home() {
             `Project "${project.name}" created successfully 🚀`
           );
 
-          // Frontend Application
+          // Frontend App
           if (
             project.type ===
             "Frontend Application"
@@ -121,8 +152,7 @@ export default function Home() {
 
           // Backend API
           else if (
-            project.type ===
-            "Backend API"
+            project.type === "Backend API"
           ) {
             setAgentStatus({
               architect: {
@@ -142,7 +172,7 @@ export default function Home() {
             });
           }
 
-          // Full Stack Application
+          // Full Stack
           else if (
             project.type ===
             "Full Stack Application"
@@ -167,8 +197,7 @@ export default function Home() {
 
           // AI Service
           else if (
-            project.type ===
-            "AI Service"
+            project.type === "AI Service"
           ) {
             setAgentStatus({
               architect: {
@@ -236,7 +265,9 @@ export default function Home() {
 
                     <div
                       className={
-                        data.status.includes("Active")
+                        data.status.includes(
+                          "Active"
+                        )
                           ? "text-green-400 font-semibold"
                           : "text-gray-400"
                       }
