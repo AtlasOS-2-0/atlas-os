@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Project } from "@/components/projects/CreateProjectModal";
 
 export default function ProjectsPage() {
+  const router = useRouter();
+
   const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
@@ -27,6 +30,15 @@ export default function ProjectsPage() {
       "atlas-projects",
       JSON.stringify(updatedProjects)
     );
+  };
+
+  const openProject = (project: Project) => {
+    localStorage.setItem(
+      "atlas-current-project",
+      JSON.stringify(project)
+    );
+
+    router.push("/workspace");
   };
 
   return (
@@ -88,6 +100,9 @@ export default function ProjectsPage() {
 
               <div className="mt-6 flex gap-3">
                 <button
+                  onClick={() =>
+                    openProject(project)
+                  }
                   className="flex-1 rounded-lg bg-blue-600 py-2 transition hover:bg-blue-500"
                 >
                   Open
