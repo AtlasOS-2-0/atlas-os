@@ -1,71 +1,64 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function EditorPage() {
-  const router = useRouter();
-
   const [projectName, setProjectName] =
     useState("");
 
-  const [selectedFile, setSelectedFile] =
+  const [fileName, setFileName] =
     useState("");
 
   const [content, setContent] =
     useState("");
 
   useEffect(() => {
-    const currentProject = JSON.parse(
-      localStorage.getItem(
-        "atlas-current-project"
-      ) || "null"
-    );
+    const currentProject =
+      JSON.parse(
+        localStorage.getItem(
+          "atlas-current-project"
+        ) || "null"
+      );
 
     const currentFile =
       localStorage.getItem(
         "atlas-current-file"
       );
 
-    if (!currentProject || !currentFile)
+    if (
+      !currentProject ||
+      !currentFile
+    )
       return;
 
     setProjectName(
       currentProject.name
     );
 
-    setSelectedFile(
-      currentFile
-    );
+    setFileName(currentFile);
 
-    const allFiles = JSON.parse(
-      localStorage.getItem(
-        "atlas-files"
-      ) || "{}"
-    );
+    const allFiles =
+      JSON.parse(
+        localStorage.getItem(
+          "atlas-files"
+        ) || "{}"
+      );
 
-    const savedContent =
-      allFiles?.[
+    const fileContent =
+      allFiles[
         currentProject.name
-      ]?.[
-        currentFile
-      ] || "";
+      ]?.[currentFile] || "";
 
-    setContent(savedContent);
+    setContent(fileContent);
   }, []);
 
   const saveFile = () => {
-    if (
-      !projectName ||
-      !selectedFile
-    )
-      return;
-
-    const allFiles = JSON.parse(
-      localStorage.getItem(
-        "atlas-files"
-      ) || "{}"
-    );
+    const allFiles =
+      JSON.parse(
+        localStorage.getItem(
+          "atlas-files"
+        ) || "{}"
+      );
 
     if (
       !allFiles[projectName]
@@ -77,7 +70,7 @@ export default function EditorPage() {
 
     allFiles[
       projectName
-    ][selectedFile] = content;
+    ][fileName] = content;
 
     localStorage.setItem(
       "atlas-files",
@@ -87,44 +80,29 @@ export default function EditorPage() {
     );
 
     alert(
-      `${selectedFile} saved successfully 💾`
+      `${fileName} saved successfully ✅`
     );
   };
 
   return (
     <main className="min-h-screen bg-black p-8 text-white">
       <div className="mb-6 flex items-center justify-between">
-        <button
-          onClick={() =>
-            router.push(
-              "/workspace"
-            )
-          }
-          className="rounded-lg bg-gray-800 px-4 py-2 hover:bg-gray-700"
-        >
-          ← Back
-        </button>
+        <div>
+          <h1 className="text-3xl font-bold">
+            {fileName}
+          </h1>
+
+          <p className="text-gray-400">
+            {projectName}
+          </p>
+        </div>
 
         <button
-          onClick={
-            saveFile
-          }
-          className="rounded-lg bg-green-600 px-6 py-2 hover:bg-green-500"
+          onClick={saveFile}
+          className="rounded-lg bg-blue-600 px-6 py-3 hover:bg-blue-500"
         >
-          Save File
+          Save
         </button>
-      </div>
-
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">
-          {selectedFile}
-        </h1>
-
-        <p className="text-gray-500">
-          Project:
-          {" "}
-          {projectName}
-        </p>
       </div>
 
       <textarea
@@ -134,8 +112,7 @@ export default function EditorPage() {
             e.target.value
           )
         }
-        className="h-[75vh] w-full rounded-xl border border-gray-800 bg-[#0B0F19] p-6 font-mono outline-none"
-        placeholder="Start writing code..."
+        className="h-[80vh] w-full rounded-xl border border-gray-800 bg-[#0B0F19] p-6 font-mono text-sm outline-none"
       />
     </main>
   );

@@ -25,39 +25,38 @@ export default function AIAssistant() {
 
     const userInput = input;
 
-    const userMessage: Message = {
-      role: "user",
-      content: userInput,
-    };
-
     setMessages((prev) => [
       ...prev,
-      userMessage,
+      {
+        role: "user",
+        content: userInput,
+      },
     ]);
 
     setInput("");
     setLoading(true);
 
     try {
-      const res = await fetch(
-        "/api/ai",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            prompt: userInput,
-          }),
-        }
-      );
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: userInput,
+        }),
+      });
 
       const data = await res.json();
 
       let response =
         data.response ||
         "Atlas AI could not generate a response.";
+
+      console.log(
+        "RAW RESPONSE:",
+        response
+      );
 
       const currentProject =
         JSON.parse(
@@ -73,21 +72,10 @@ export default function AIAssistant() {
           ) || "{}"
         );
 
-      // Local file generation fallback
-      if (
-        currentProject &&
-        (
-          userInput
-            .toLowerCase()
-            .includes("login") ||
-          userInput
-            .toLowerCase()
-            .includes("auth")
-        )
-      ) {
+      if (currentProject) {
         if (
           !allFiles[
-            currentProject.name
+          currentProject.name
           ]
         ) {
           allFiles[
@@ -95,26 +83,26 @@ export default function AIAssistant() {
           ] = {};
         }
 
-        allFiles[
-          currentProject.name
-        ]["auth.py"] = `
-from fastapi import APIRouter
+    try {
+  const parsed = JSON.parse(response);
 
-router = APIRouter()
+  if (parsed.files) {
+    Object.entries(parsed.files).forEach(
+      ([filename, content]) => {
+        allFiles[currentProject.name][filename] =
+          content;
+      }
+    );
 
-@router.post("/login")
-async def login():
-    return {
-        "message": "Login successful"
-    }
-`;
-
-        allFiles[
-          currentProject.name
-        ]["jwt_service.py"] = `
-SECRET_KEY = "atlas-secret-key"
-ALGORITHM = "HS256"
-`;
+    response = `Generated ${
+      Object.keys(parsed.files).length
+    } files successfully 🚀`;
+  }
+} catch (err) {
+  console.log(
+    "AI response was not JSON"
+  );
+}
 
         localStorage.setItem(
           "atlas-files",
@@ -123,8 +111,7 @@ ALGORITHM = "HS256"
           )
         );
 
-        response +=
-          "\n\nGenerated files:\n- auth.py\n- jwt_service.py";
+      
       }
 
       setMessages((prev) => [
@@ -135,19 +122,20 @@ ALGORITHM = "HS256"
         },
       ]);
     } catch (error) {
+      console.error(error);
+
       setMessages((prev) => [
         ...prev,
         {
           role: "agent",
           content:
-            "Atlas AI failed to connect to Gemini.",
+            "Atlas AI failed to generate files.",
         },
       ]);
     }
 
     setLoading(false);
   };
-
   return (
     <div className="rounded-xl border border-gray-800 bg-[#0B0F19] p-6">
       <h2 className="mb-4 text-2xl font-bold">
@@ -159,12 +147,11 @@ ALGORITHM = "HS256"
           (message, index) => (
             <div
               key={index}
-              className={`rounded-lg p-3 ${
-                message.role ===
+              className={`rounded-lg p-3 ${message.role ===
                 "user"
-                  ? "bg-blue-600"
-                  : "bg-gray-900"
-              }`}
+                ? "bg-blue-600"
+                : "bg-gray-900"
+                }`}
             >
               {
                 message.content

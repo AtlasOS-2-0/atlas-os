@@ -2,58 +2,63 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    console.log(
-  "Gemini Key Loaded:",
-  !!process.env.GEMINI_API_KEY
-);
     const { prompt } = await req.json();
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
         headers: {
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          contents: [
+          model: "llama-3.3-70b-versatile",
+          messages: [
             {
-              parts: [
-                {
-                  text: `You are Atlas OS AI Architect.
-Generate concise software engineering responses.
+              role: "system",
+              content: `
+You are Atlas OS AI Architect.
 
-User Request:
-${prompt}`,
-                },
-              ],
+Return your answer ONLY in this format:
+
+FILE: filename.ext
+<file content>
+
+FILE: another_file.ext
+<file content>
+
+Do not use markdown.
+Do not explain anything.
+Only return files.
+`,
+            },
+            {
+              role: "user",
+              content: prompt,
             },
           ],
         }),
       }
     );
 
-const data = await response.json();
-
-console.log("Gemini Status:", response.status);
-console.log("Gemini Response:", JSON.stringify(data, null, 2));
-    const aiResponse =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Atlas AI could not generate a response.";
+    const data = await response.json();
 
     return NextResponse.json({
       success: true,
-      response: aiResponse,
+      response:
+        data.choices?.[0]?.message?.content ||
+        "No response generated.",
     });
   } catch (error) {
-    console.error(error);
-
     return NextResponse.json(
       {
         success: false,
         response: "AI request failed.",
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }

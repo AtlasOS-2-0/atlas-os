@@ -53,6 +53,18 @@ export default function ProjectsPage() {
         );
       }
     }
+    const allFiles = JSON.parse(
+      localStorage.getItem(
+        "atlas-files"
+      ) || "{}"
+    );
+
+    delete allFiles[projectName];
+
+    localStorage.setItem(
+      "atlas-files",
+      JSON.stringify(allFiles)
+    );
   };
 
   const openProject = (
