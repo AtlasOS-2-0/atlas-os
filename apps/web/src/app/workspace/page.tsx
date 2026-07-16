@@ -48,14 +48,14 @@ export default function WorkspacePage() {
   const backendActive =
     selectedProject?.type === "Backend API" ||
     selectedProject?.type ===
-      "Full Stack Application" ||
+    "Full Stack Application" ||
     selectedProject?.type === "AI Service";
 
   const frontendActive =
     selectedProject?.type ===
-      "Frontend Application" ||
+    "Frontend Application" ||
     selectedProject?.type ===
-      "Full Stack Application";
+    "Full Stack Application";
 
   return (
     <main className="min-h-screen bg-black p-8 text-white">
@@ -146,19 +146,15 @@ export default function WorkspacePage() {
               </h2>
 
               <div className="space-y-2 text-gray-400">
-                <div>📁 src</div>
-                <div className="ml-4">
-                  📁 components
-                </div>
-                <div className="ml-4">
-                  📁 pages
-                </div>
-                <div className="ml-4">
-                  📁 services
-                </div>
-                <div>📁 public</div>
-                <div>📄 package.json</div>
-                <div>📄 README.md</div>
+                {(selectedProject.files ?? []).map(
+                  (file, index) => (
+                    <div key={index}>
+                      {file.endsWith("/")
+                        ? `📁 ${file}`
+                        : `📄 ${file}`}
+                    </div>
+                  )
+                )}
               </div>
             </div>
 

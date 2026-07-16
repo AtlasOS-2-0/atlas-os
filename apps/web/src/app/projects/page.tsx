@@ -19,10 +19,14 @@ export default function ProjectsPage() {
     }
   }, []);
 
-  const deleteProject = (projectName: string) => {
-    const updatedProjects = projects.filter(
-      (project) => project.name !== projectName
-    );
+  const deleteProject = (
+    projectName: string
+  ) => {
+    const updatedProjects =
+      projects.filter(
+        (project) =>
+          project.name !== projectName
+      );
 
     setProjects(updatedProjects);
 
@@ -30,15 +34,67 @@ export default function ProjectsPage() {
       "atlas-projects",
       JSON.stringify(updatedProjects)
     );
+
+    const currentProject =
+      localStorage.getItem(
+        "atlas-current-project"
+      );
+
+    if (currentProject) {
+      const parsedCurrent =
+        JSON.parse(currentProject);
+
+      if (
+        parsedCurrent.name ===
+        projectName
+      ) {
+        localStorage.removeItem(
+          "atlas-current-project"
+        );
+      }
+    }
   };
 
-  const openProject = (project: Project) => {
+  const openProject = (
+    project: Project
+  ) => {
     localStorage.setItem(
       "atlas-current-project",
       JSON.stringify(project)
     );
 
     router.push("/workspace");
+  };
+
+  const deployProject = (
+    project: Project
+  ) => {
+    const deployment = {
+      id: Date.now(),
+      project: project.name,
+      environment: "Production",
+      status: "Success ✅",
+      time: new Date().toLocaleString(),
+    };
+
+    const existingDeployments =
+      JSON.parse(
+        localStorage.getItem(
+          "atlas-deployments"
+        ) || "[]"
+      );
+
+    localStorage.setItem(
+      "atlas-deployments",
+      JSON.stringify([
+        deployment,
+        ...existingDeployments,
+      ])
+    );
+
+    alert(
+      `${project.name} deployed successfully 🚀`
+    );
   };
 
   return (
@@ -59,66 +115,79 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <div
-              key={project.name}
-              className="rounded-xl border border-gray-800 bg-[#0B0F19] p-6 transition hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10"
-            >
-              <h2 className="text-xl font-semibold">
-                {project.name}
-              </h2>
+          {projects.map(
+            (project) => (
+              <div
+                key={project.name}
+                className="rounded-xl border border-gray-800 bg-[#0B0F19] p-6 transition hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10"
+              >
+                <h2 className="text-xl font-semibold">
+                  {project.name}
+                </h2>
 
-              <div className="mt-4 space-y-2 text-sm text-gray-400">
-                <p>
-                  Type:
-                  <span className="ml-2 text-purple-400">
-                    {project.type}
-                  </span>
-                </p>
+                <div className="mt-4 space-y-2 text-sm text-gray-400">
+                  <p>
+                    Type:
+                    <span className="ml-2 text-purple-400">
+                      {project.type}
+                    </span>
+                  </p>
 
-                <p>
-                  Stack:
-                  <span className="ml-2 text-blue-400">
-                    {project.stack}
-                  </span>
-                </p>
+                  <p>
+                    Stack:
+                    <span className="ml-2 text-blue-400">
+                      {project.stack}
+                    </span>
+                  </p>
 
-                <p>
-                  Status:
-                  <span className="ml-2 text-yellow-400">
-                    {project.status}
-                  </span>
-                </p>
+                  <p>
+                    Status:
+                    <span className="ml-2 text-yellow-400">
+                      {project.status}
+                    </span>
+                  </p>
 
-                <p>
-                  Created by:
-                  <span className="ml-2 text-green-400">
-                    Atlas OS
-                  </span>
-                </p>
+                  <p>
+                    Created by:
+                    <span className="ml-2 text-green-400">
+                      Atlas OS
+                    </span>
+                  </p>
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <button
+                    onClick={() =>
+                      openProject(project)
+                    }
+                    className="flex-1 rounded-lg bg-blue-600 py-2 transition hover:bg-blue-500"
+                  >
+                    Open
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      deployProject(project)
+                    }
+                    className="rounded-lg bg-green-600 px-4 py-2 transition hover:bg-green-500"
+                  >
+                    Deploy
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      deleteProject(
+                        project.name
+                      )
+                    }
+                    className="rounded-lg bg-red-600 px-4 py-2 transition hover:bg-red-500"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={() =>
-                    openProject(project)
-                  }
-                  className="flex-1 rounded-lg bg-blue-600 py-2 transition hover:bg-blue-500"
-                >
-                  Open
-                </button>
-
-                <button
-                  onClick={() =>
-                    deleteProject(project.name)
-                  }
-                  className="rounded-lg bg-red-600 px-4 py-2 transition hover:bg-red-500"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
     </main>

@@ -12,13 +12,17 @@ interface Deployment {
 
 export default function DeploymentsPage() {
   const [deployments, setDeployments] = useState<Deployment[]>([]);
-  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedProject, setSelectedProject] =
+    useState("");
   const [environment, setEnvironment] =
     useState("Development");
 
+  // Load deployments
   useEffect(() => {
     const savedDeployments =
-      localStorage.getItem("atlas-deployments");
+      localStorage.getItem(
+        "atlas-deployments"
+      );
 
     if (savedDeployments) {
       setDeployments(
@@ -27,6 +31,7 @@ export default function DeploymentsPage() {
     }
   }, []);
 
+  // Save deployments
   useEffect(() => {
     localStorage.setItem(
       "atlas-deployments",
@@ -50,23 +55,26 @@ export default function DeploymentsPage() {
       ...prev,
     ]);
 
+    // Simulate deployment completion
     setTimeout(() => {
       setDeployments((prev) =>
         prev.map((item) =>
           item.id === deployment.id
             ? {
                 ...item,
-                status:
-                  "Success ✅",
+                status: "Success ✅",
               }
             : item
         )
       );
     }, 3000);
+
+    setSelectedProject("");
   };
 
   return (
     <main className="min-h-screen bg-black p-8 text-white">
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold">
           Deployments
@@ -92,7 +100,7 @@ export default function DeploymentsPage() {
               )
             }
             placeholder="Project Name"
-            className="rounded-lg border border-gray-700 bg-black p-3"
+            className="rounded-lg border border-gray-700 bg-black p-3 outline-none focus:border-blue-500"
           />
 
           <select
@@ -113,7 +121,7 @@ export default function DeploymentsPage() {
 
           <button
             onClick={deployProject}
-            className="rounded-lg bg-blue-600 p-3 transition hover:bg-blue-500"
+            className="rounded-lg bg-blue-600 p-3 font-semibold transition hover:bg-blue-500"
           >
             Deploy Project
           </button>
@@ -140,15 +148,16 @@ export default function DeploymentsPage() {
                   }
                   className="rounded-lg border border-gray-700 p-4"
                 >
-                  <div className="flex justify-between">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold">
+                      <div className="text-lg font-semibold">
+                        🚀{" "}
                         {
                           deployment.project
                         }
                       </div>
 
-                      <div className="text-sm text-gray-500">
+                      <div className="mt-1 text-sm text-gray-500">
                         {
                           deployment.environment
                         }{" "}
@@ -164,8 +173,8 @@ export default function DeploymentsPage() {
                         deployment.status.includes(
                           "Success"
                         )
-                          ? "text-green-400"
-                          : "text-yellow-400"
+                          ? "font-semibold text-green-400"
+                          : "font-semibold text-yellow-400"
                       }
                     >
                       {
