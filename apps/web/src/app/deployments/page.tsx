@@ -11,9 +11,15 @@ interface Deployment {
 }
 
 export default function DeploymentsPage() {
-  const [deployments, setDeployments] = useState<Deployment[]>([]);
+  const [deployments, setDeployments] =
+    useState<Deployment[]>([]);
+
+  const [loaded, setLoaded] =
+    useState(false);
+
   const [selectedProject, setSelectedProject] =
     useState("");
+
   const [environment, setEnvironment] =
     useState("Development");
 
@@ -29,15 +35,19 @@ export default function DeploymentsPage() {
         JSON.parse(savedDeployments)
       );
     }
+
+    setLoaded(true);
   }, []);
 
-  // Save deployments
+  // Save deployments only after initial load
   useEffect(() => {
+    if (!loaded) return;
+
     localStorage.setItem(
       "atlas-deployments",
       JSON.stringify(deployments)
     );
-  }, [deployments]);
+  }, [deployments, loaded]);
 
   const deployProject = () => {
     if (!selectedProject.trim()) return;
@@ -55,7 +65,6 @@ export default function DeploymentsPage() {
       ...prev,
     ]);
 
-    // Simulate deployment completion
     setTimeout(() => {
       setDeployments((prev) =>
         prev.map((item) =>
@@ -74,7 +83,6 @@ export default function DeploymentsPage() {
 
   return (
     <main className="min-h-screen bg-black p-8 text-white">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold">
           Deployments
@@ -115,8 +123,14 @@ export default function DeploymentsPage() {
             <option>
               Development
             </option>
-            <option>Staging</option>
-            <option>Production</option>
+
+            <option>
+              Staging
+            </option>
+
+            <option>
+              Production
+            </option>
           </select>
 
           <button
@@ -143,18 +157,14 @@ export default function DeploymentsPage() {
             {deployments.map(
               (deployment) => (
                 <div
-                  key={
-                    deployment.id
-                  }
+                  key={deployment.id}
                   className="rounded-lg border border-gray-700 p-4"
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-lg font-semibold">
                         🚀{" "}
-                        {
-                          deployment.project
-                        }
+                        {deployment.project}
                       </div>
 
                       <div className="mt-1 text-sm text-gray-500">

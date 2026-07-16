@@ -12,10 +12,13 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<
-    Notification[]
-  >([]);
+  const [notifications, setNotifications] =
+    useState<Notification[]>([]);
 
+  const [loaded, setLoaded] =
+    useState(false);
+
+  // Load notifications
   useEffect(() => {
     const savedNotifications =
       localStorage.getItem(
@@ -53,7 +56,8 @@ export default function NotificationsPage() {
 
           {
             id: 3,
-            title: "System Healthy",
+            title:
+              "System Healthy",
             message:
               "All Atlas OS services are operational.",
             type: "system",
@@ -66,33 +70,42 @@ export default function NotificationsPage() {
         defaultNotifications
       );
     }
+
+    setLoaded(true);
   }, []);
 
+  // Save notifications only after loading
   useEffect(() => {
+    if (!loaded) return;
+
     localStorage.setItem(
       "atlas-notifications",
-      JSON.stringify(notifications)
+      JSON.stringify(
+        notifications
+      )
     );
-  }, [notifications]);
+  }, [notifications, loaded]);
 
   const markAsRead = (
     id: number
   ) => {
     setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id
-          ? {
-              ...notification,
-              read: true,
-            }
-          : notification
+      prev.map(
+        (notification) =>
+          notification.id === id
+            ? {
+                ...notification,
+                read: true,
+              }
+            : notification
       )
     );
   };
 
-  const clearNotifications = () => {
-    setNotifications([]);
-  };
+  const clearNotifications =
+    () => {
+      setNotifications([]);
+    };
 
   const getIcon = (
     type: Notification["type"]
@@ -114,7 +127,6 @@ export default function NotificationsPage() {
 
   return (
     <main className="min-h-screen bg-black p-8 text-white">
-      {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold">
@@ -127,22 +139,26 @@ export default function NotificationsPage() {
         </div>
 
         <button
-          onClick={clearNotifications}
+          onClick={
+            clearNotifications
+          }
           className="rounded-lg bg-red-600 px-4 py-2 transition hover:bg-red-500"
         >
           Clear All
         </button>
       </div>
 
-      {/* Empty State */}
-      {notifications.length === 0 ? (
+      {notifications.length ===
+      0 ? (
         <div className="rounded-xl border border-gray-800 bg-[#0B0F19] p-8 text-center text-gray-500">
           No notifications available.
         </div>
       ) : (
         <div className="space-y-4">
           {notifications.map(
-            (notification) => (
+            (
+              notification
+            ) => (
               <div
                 key={
                   notification.id

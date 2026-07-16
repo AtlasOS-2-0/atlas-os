@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 import { Project } from "@/components/projects/CreateProjectModal";
 import AIAssistant from "@/components/workspace/AIAssistant";
+import { useRouter } from "next/navigation";
 
 export default function WorkspacePage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] =
     useState<Project | null>(null);
+
 
   useEffect(() => {
     const savedProjects = localStorage.getItem(
@@ -100,7 +103,6 @@ export default function WorkspacePage() {
         </div>
       ) : (
         <>
-          {/* Top Section */}
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Project Info */}
             <div className="rounded-xl border border-gray-800 bg-[#0B0F19] p-6">
@@ -136,6 +138,13 @@ export default function WorkspacePage() {
                   </span>{" "}
                   {selectedProject.status}
                 </div>
+
+                <div>
+                  <span className="text-gray-500">
+                    Files:
+                  </span>{" "}
+                  {selectedProject.files?.length || 0}
+                </div>
               </div>
             </div>
 
@@ -145,17 +154,48 @@ export default function WorkspacePage() {
                 File Explorer
               </h2>
 
-              <div className="space-y-2 text-gray-400">
-                {(selectedProject.files ?? []).map(
-                  (file, index) => (
-                    <div key={index}>
-                      {file.endsWith("/")
-                        ? `📁 ${file}`
-                        : `📄 ${file}`}
-                    </div>
-                  )
-                )}
-              </div>
+              {selectedProject.files &&
+                selectedProject.files.length > 0 ? (
+                <div className="space-y-2 text-gray-400">
+                  {[
+                    ...(selectedProject.files || []),
+                    ...Object.keys(
+                      JSON.parse(
+                        localStorage.getItem(
+                          "atlas-files"
+                        ) || "{}"
+                      )?.[selectedProject.name] || {}
+                    ),
+                  ].map(
+                    (file, index) => (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          if (!file.endsWith("/")) {
+                            localStorage.setItem(
+                              "atlas-current-file",
+                              file
+                            );
+
+                            router.push(
+                              "/workspace/editor"
+                            );
+                          }
+                        }}
+                        className="cursor-pointer rounded-lg p-2 hover:bg-gray-800"
+                      >
+                        {file.endsWith("/")
+                          ? `📁 ${file}`
+                          : `📄 ${file}`}
+                      </div>
+                    )
+                  )}
+                </div>
+              ) : (
+                <div className="text-gray-500">
+                  No files available for this project.
+                </div>
+              )}
             </div>
 
             {/* Active Agents */}
@@ -211,6 +251,7 @@ export default function WorkspacePage() {
           <div className="mt-6">
             <AIAssistant />
           </div>
+
         </>
       )}
     </main>

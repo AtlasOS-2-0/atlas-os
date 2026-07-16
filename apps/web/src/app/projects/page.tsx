@@ -69,12 +69,17 @@ export default function ProjectsPage() {
   const deployProject = (
     project: Project
   ) => {
+    const timestamp = Date.now();
+    const currentTime =
+      new Date().toLocaleString();
+
+    // Deployment
     const deployment = {
-      id: Date.now(),
+      id: timestamp,
       project: project.name,
       environment: "Production",
       status: "Success ✅",
-      time: new Date().toLocaleString(),
+      time: currentTime,
     };
 
     const existingDeployments =
@@ -90,6 +95,52 @@ export default function ProjectsPage() {
         deployment,
         ...existingDeployments,
       ])
+    );
+
+    // Notification
+    const notifications =
+      JSON.parse(
+        localStorage.getItem(
+          "atlas-notifications"
+        ) || "[]"
+      );
+
+    notifications.unshift({
+      id: timestamp,
+      title: "Deployment Successful",
+      message: `${project.name} deployed successfully 🚀`,
+      type: "deployment",
+      read: false,
+      time: currentTime,
+    });
+
+    localStorage.setItem(
+      "atlas-notifications",
+      JSON.stringify(
+        notifications
+      )
+    );
+
+    // Monitoring Event
+    const monitoringEvents =
+      JSON.parse(
+        localStorage.getItem(
+          "atlas-monitoring"
+        ) || "[]"
+      );
+
+    monitoringEvents.unshift({
+      id: timestamp,
+      event: `Deployment completed for ${project.name}`,
+      severity: "info",
+      time: currentTime,
+    });
+
+    localStorage.setItem(
+      "atlas-monitoring",
+      JSON.stringify(
+        monitoringEvents
+      )
     );
 
     alert(
