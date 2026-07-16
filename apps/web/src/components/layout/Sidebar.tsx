@@ -39,6 +39,11 @@ export default function Sidebar() {
       name: "Settings",
       href: "/settings",
     },
+    {
+     name: "Notifications",
+     href: "/notifications",
+    
+    },
   ];
 
   return (
