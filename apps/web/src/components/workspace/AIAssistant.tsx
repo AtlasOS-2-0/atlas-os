@@ -24,6 +24,19 @@ export default function AIAssistant() {
     if (!input.trim()) return;
 
     const userInput = input;
+    const currentProject =
+      JSON.parse(
+        localStorage.getItem(
+          "atlas-current-project"
+        ) || "null"
+      );
+
+    const allFiles =
+      JSON.parse(
+        localStorage.getItem(
+          "atlas-files"
+        ) || "{}"
+      );
 
     setMessages((prev) => [
       ...prev,
@@ -37,13 +50,49 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
+      const currentFile =
+        localStorage.getItem(
+          "atlas-current-file"
+        );
+
+      let prompt = userInput;
+
+      if (currentProject && currentFile) {
+        const files = JSON.parse(
+          localStorage.getItem(
+            "atlas-files"
+          ) || "{}"
+        );
+
+        const fileContent =
+          files[currentProject.name]?.[
+          currentFile
+          ];
+
+        if (fileContent) {
+          prompt = `
+Current file: ${currentFile}
+
+Current content:
+${fileContent}
+
+User request:
+${userInput}
+
+Return ONLY the updated file using this format:
+
+FILE: ${currentFile}
+<updated code>
+`;
+        }
+      }
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt: userInput,
+          prompt,
         }),
       });
 
@@ -58,60 +107,71 @@ export default function AIAssistant() {
         response
       );
 
-      const currentProject =
-        JSON.parse(
-          localStorage.getItem(
-            "atlas-current-project"
-          ) || "null"
-        );
 
-      const allFiles =
-        JSON.parse(
-          localStorage.getItem(
-            "atlas-files"
-          ) || "{}"
-        );
 
       if (currentProject) {
-        if (
-          !allFiles[
-          currentProject.name
-          ]
-        ) {
-          allFiles[
-            currentProject.name
-          ] = {};
+        if (!allFiles[currentProject.name]) {
+          allFiles[currentProject.name] = {};
         }
+        let createdCount = 0;
+        let updatedCount = 0;
 
-    try {
-  const parsed = JSON.parse(response);
+        const parts = response.split("FILE:");
 
-  if (parsed.files) {
-    Object.entries(parsed.files).forEach(
-      ([filename, content]) => {
-        allFiles[currentProject.name][filename] =
-          content;
-      }
-    );
+        parts.forEach((part: string) => {
+          const trimmed = part.trim();
 
-    response = `Generated ${
-      Object.keys(parsed.files).length
-    } files successfully 🚀`;
-  }
-} catch (err) {
-  console.log(
-    "AI response was not JSON"
-  );
-}
+          if (!trimmed) return;
+
+          const lines = trimmed.split("\n");
+
+          const filename = lines[0].trim();
+
+          const content = lines
+            .slice(1)
+            .join("\n")
+            .trim();
+
+          if (filename && content) {
+            const existed =
+              !!allFiles[currentProject.name][filename];
+
+            allFiles[currentProject.name][filename] =
+              content;
+
+            if (existed) {
+              updatedCount++;
+            } else {
+              createdCount++;
+            }
+          }
+        });
 
         localStorage.setItem(
           "atlas-files",
-          JSON.stringify(
-            allFiles
-          )
+          JSON.stringify(allFiles)
+        );
+        window.dispatchEvent(
+          new Event("atlas-files-updated")
         );
 
-      
+        console.log(
+          "SAVED FILES:",
+          allFiles
+        );
+
+        if (createdCount > 0 && updatedCount > 0) {
+          response =
+            `Created ${createdCount} files and updated ${updatedCount} files 🚀`;
+        }
+        else if (createdCount > 0) {
+          response =
+            `Created ${createdCount} files successfully 🚀`;
+        }
+        else if (updatedCount > 0) {
+          response =
+            `Updated ${updatedCount} files successfully 🚀`;
+        }
       }
 
       setMessages((prev) => [
