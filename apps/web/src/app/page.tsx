@@ -44,6 +44,18 @@ export default function Home() {
 
   // Load projects from localStorage
   useEffect(() => {
+    const allFiles = JSON.parse(
+  localStorage.getItem("atlas-files") || "{}"
+);
+
+if (!allFiles["scratch"]) {
+  allFiles["scratch"] = {};
+}
+
+localStorage.setItem(
+  "atlas-files",
+  JSON.stringify(allFiles)
+);
     const savedProjects =
       localStorage.getItem("atlas-projects");
 

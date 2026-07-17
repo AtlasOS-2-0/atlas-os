@@ -26,7 +26,12 @@ export default function EditorPage() {
         localStorage.getItem(
           "atlas-current-project"
         ) || "null"
-      );
+      ) || {
+        name: "scratch",
+        type: "Scratch Workspace",
+        stack: "Mixed",
+        status: "Ready",
+      };
 
     const currentFile =
       localStorage.getItem(
@@ -70,7 +75,7 @@ export default function EditorPage() {
     setOpenTabs([currentFile]);
   }, []);
 
-  const saveFile = () => {
+  const saveFile = async () => {
     const allFiles =
       JSON.parse(
         localStorage.getItem(
@@ -96,6 +101,21 @@ export default function EditorPage() {
         allFiles
       )
     );
+    await fetch(
+      "/api/workspace/save",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify({
+          project: projectName,
+          files:
+            allFiles[projectName],
+        }),
+      }
+    );
     setFiles(
       Object.keys(
         allFiles[projectName]
@@ -112,68 +132,146 @@ export default function EditorPage() {
       `${fileName} saved successfully ✅`
     );
   };
+  const createFile = async () => {
+    const newFile = prompt(
+      "Enter file name"
+    );
+
+    if (!newFile) return;
+
+    const allFiles = JSON.parse(
+      localStorage.getItem(
+        "atlas-files"
+      ) || "{}"
+    );
+
+    if (!allFiles[projectName]) {
+      allFiles[projectName] = {};
+    }
+
+    if (
+      allFiles[projectName][newFile]
+    ) {
+      alert(
+        "File already exists."
+      );
+      return;
+    }
+
+    allFiles[projectName][newFile] = "";
+
+    localStorage.setItem(
+      "atlas-files",
+      JSON.stringify(allFiles)
+    );
+
+    setFiles(
+      Object.keys(
+        allFiles[projectName]
+      )
+    );
+
+    localStorage.setItem(
+      "atlas-current-file",
+      newFile
+    );
+
+    setFileName(newFile);
+    setContent("");
+    setSavedContent("");
+
+    window.dispatchEvent(
+      new Event(
+        "atlas-files-updated"
+      )
+    );
+
+    await fetch(
+      "/api/workspace/save",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify({
+          project: projectName,
+          files:
+            allFiles[
+            projectName
+            ],
+        }),
+      }
+    );
+  };
 
   const runCode = async () => {
     setRunning(true);
     setOutput("Running...");
 
     try {
+      let command = "";
+
       if (
-        fileName.endsWith(".js") ||
-        fileName.endsWith(".ts")
-      ) {
-        const logs: string[] = [];
-
-        const originalLog =
-          console.log;
-
-        console.log = (...args) => {
-          logs.push(
-            args.join(" ")
-          );
-        };
-
-        eval(content);
-
-        console.log =
-          originalLog;
-
-        setOutput(
-          logs.join("\n") ||
-          "Execution completed."
-        );
-      }
-
-      else if (
-        fileName.endsWith(".html")
-      ) {
-        setOutput(
-          "HTML preview available in browser."
-        );
-      }
-
-      else if (
         fileName.endsWith(".py")
       ) {
-        setOutput(
-          "Python execution support coming soon."
-        );
+        command =
+          `python ${fileName}`;
+      }
+
+      else if (
+        fileName.endsWith(".js")
+      ) {
+        command =
+          `node ${fileName}`;
+      }
+
+      else if (
+        fileName.endsWith(".ts")
+      ) {
+        command =
+          `npx ts-node ${fileName}`;
       }
 
       else {
         setOutput(
-          "This file type cannot be executed yet."
+          "Unsupported file type."
         );
+        setRunning(false);
+        return;
       }
+
+      const res = await fetch(
+        "/api/terminal",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            project:
+              projectName,
+            command,
+          }),
+        }
+      );
+
+      const data =
+        await res.json();
+
+      setOutput(
+        data.output
+      );
     } catch (err: any) {
       setOutput(
-        err.message || "Execution failed."
+        err.message ||
+        "Execution failed."
       );
     }
 
     setRunning(false);
   };
-
   return (
     <main className="min-h-screen bg-black p-8 text-white">
       <div className="mb-6 flex items-center justify-between">
@@ -223,9 +321,18 @@ export default function EditorPage() {
       <div className="grid grid-cols-5 gap-4 h-[75vh]">
         {/* File Explorer */}
         <div className="col-span-1 rounded-xl border border-gray-800 bg-[#0B0F19] p-4 overflow-y-auto">
-          <h2 className="mb-4 text-lg font-bold">
-            Files
-          </h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-bold">
+              Files
+            </h2>
+
+            <button
+              onClick={createFile}
+              className="rounded bg-blue-600 px-3 py-1 text-sm hover:bg-blue-500"
+            >
+              + File
+            </button>
+          </div>
 
           {files.map((file) => (
             <div
@@ -275,8 +382,8 @@ export default function EditorPage() {
               <div
                 key={tab}
                 className={`flex items-center gap-2 cursor-pointer px-4 py-2 text-sm ${tab === fileName
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-400 hover:bg-gray-800"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-400 hover:bg-gray-800"
                   }`}
                 onClick={() => {
                   const allFiles = JSON.parse(

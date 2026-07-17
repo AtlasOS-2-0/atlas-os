@@ -27,7 +27,18 @@ export default function WorkspacePage() {
       const parsedProjects: Project[] =
         JSON.parse(savedProjects);
 
-      setProjects(parsedProjects);
+      const scratchProject: Project = {
+        name: "scratch",
+        type: "Scratch Workspace",
+        stack: "Mixed",
+        status: "Ready",
+        files: [],
+      };
+
+      setProjects([
+        scratchProject,
+        ...parsedProjects,
+      ]);
 
       if (currentProject) {
         setSelectedProject(
@@ -44,9 +55,11 @@ export default function WorkspacePage() {
             ] || {}
           )
         );
-      } else if (parsedProjects.length > 0) {
-        setSelectedProject(parsedProjects[0]);
-      }
+      }else {
+  setSelectedProject(
+    scratchProject
+  );
+}
     }
   }, []);
   useEffect(() => {
